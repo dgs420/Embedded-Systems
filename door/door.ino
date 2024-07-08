@@ -2,6 +2,7 @@
 #include <LiquidCrystal_I2C.h>
 #include <Keypad.h>
 #include <Servo.h>
+#include <EEPROM.h>
 
 #define Password_Length 5
 
@@ -40,7 +41,11 @@ void setup() {
   lcd.backlight();
   myServo.attach(signalPin);
   lcd.setCursor(0, 0);
-  lcd.print("Stand by...");
+  lcd.print("Waiting...");
+  // Initialize Master password from EEPROM
+  for (int i = 0; i < Password_Length - 1; i++) {
+    EEPROM.get(i, Master[i]);
+  }
 }
 
 void loop() {
@@ -48,7 +53,7 @@ void loop() {
   customKey = customKeypad.getKey();
   if (customKey == '*') {
     DisplayText(0, 0, "Enter Password:");
-    
+
     GetCode();
 
     if (data_count == Password_Length - 1) {
@@ -70,7 +75,7 @@ void loop() {
   }
 
   if (customKey == '#') {  // To change the code it calls the changecode function
-   
+
     DisplayText(0, 0, "Old Password:");
     GetCode();
     if (data_count == Password_Length - 1) {
@@ -90,10 +95,10 @@ void loop() {
   if (customKey == 'D') {
     if (isOpen) {
       Lock();
-      DisplayText(0,0,"Door locked");
+      DisplayText(0, 0, "Door locked");
     } else {
 
-      DisplayText(0,0,"Door locked!");
+      DisplayText(0, 0, "Door locked!");
     }
 
     WaitKey();
@@ -145,7 +150,7 @@ void DisplayText(int x, int y, String text) {
 void WaitKey() {
   lcd.clear();
   clearData();
-  lcd.print("Standby...");
+  lcd.print("Waiting...");
 }
 
 void ChangePassword() {
@@ -166,8 +171,8 @@ void ChangePassword() {
   // Once the new password is fully entered, update the Master password
   for (int i = 0; i < Password_Length; i++) {
     Master[i] = Data[i];
+    EEPROM.put(i, Master[i]);
   }
 
-  DisplayText(0,0,"Pwd Changed");
-
+  DisplayText(0, 0, "Pwd Changed");
 }
