@@ -1,3 +1,5 @@
+#include <SPI.h>
+#include <MFRC522.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <Keypad.h>
@@ -5,12 +7,17 @@
 #include <EEPROM.h>
 
 #define Password_Length 5
+#define SS_PIN A2
+#define RST_PIN A3
 
-int signalPin = 12;
+int signalPin = 10;
 
 char Data[Password_Length];
 char Master[Password_Length] = "1234";
 byte data_count = 0, master_count = 0;
+String tag_UID = "F3D2CC1B";  // Replace this with the UID of your tag!!!
+String tagID = "";
+MFRC522 mfrc522(SS_PIN, RST_PIN); 
 bool Pass_is_good;
 
 bool isOpen = false;
@@ -39,6 +46,8 @@ Servo myServo;
 void setup() {
   lcd.init();
   lcd.backlight();
+  SPI.begin();             // SPI bus
+  mfrc522.PCD_Init();
   myServo.attach(signalPin);
   lcd.setCursor(0, 0);
   lcd.print("Waiting...");
@@ -49,7 +58,17 @@ void setup() {
 }
 
 void loop() {
-
+  readID();
+  if (tagID == tag_UID) {
+    DisplayText(0, 0, "Valid card");
+    if (isOpen) {
+      DisplayText(0, 0, "Door is opened!");
+    } else {
+      Unlock();
+    }
+  } else if (tagID != tag_UID && tagID != NULL){
+    DisplayText(0, 0, "Invalid card");
+  }
   customKey = customKeypad.getKey();
   if (customKey == '*') {
     DisplayText(0, 0, "Enter Password:");
@@ -138,6 +157,26 @@ void Lock() {
   delay(120);          // Wait
   myServo.write(91);
   isOpen = false;
+}
+
+boolean readID() {
+  //Check if a new tag is detected or not. If not return.
+  if (!mfrc522.PICC_IsNewCardPresent()) {
+    return false;
+  }
+  //Check if a new tag is readable or not. If not return.
+  if (!mfrc522.PICC_ReadCardSerial()) {
+    return false;
+  }
+  tagID = "";
+  // Read the 4 byte UID
+  for (uint8_t i = 0; i < 4; i++) {
+    //readCard[i] = mfrc522.uid.uidByte[i];
+    tagID.concat(String(mfrc522.uid.uidByte[i], HEX));  // Convert the UID to a single String
+  }
+  tagID.toUpperCase();
+  mfrc522.PICC_HaltA();  // Stop reading
+  return true;
 }
 
 void DisplayText(int x, int y, String text) {
