@@ -9,6 +9,7 @@
 #define Password_Length 5
 #define SS_PIN A2
 #define RST_PIN A3
+#define ANGLE 200
 
 int signalPin = 10;
 
@@ -55,6 +56,9 @@ void setup() {
   for (int i = 0; i < Password_Length - 1; i++) {
     EEPROM.get(i, Master[i]);
   }
+
+  // Initialize Lock state from EEPROM
+  EEPROM.get(100, isOpen);
 }
 
 void loop() {
@@ -64,7 +68,8 @@ void loop() {
     if (isOpen) {
       DisplayText(0, 0, "Door is opened!");
     } else {
-      Unlock();
+      // Unlock();
+      SetLock(0,ANGLE,true);
     }
   } else if (tagID != tag_UID && tagID != NULL){
     DisplayText(0, 0, "Invalid card");
@@ -82,8 +87,10 @@ void loop() {
         DisplayText(0, 0, "Correct");
         if (isOpen) {
           DisplayText(0, 0, "Door is opened!");
+          delay(1000);
         } else {
-          Unlock();
+          // Unlock();
+          SetLock(0,ANGLE,true);
         }
       } else {
         DisplayText(0, 0, "Incorrect");
@@ -113,7 +120,8 @@ void loop() {
 
   if (customKey == 'D') {
     if (isOpen) {
-      Lock();
+      // Lock();
+      SetLock(180,ANGLE,false);
       DisplayText(0, 0, "Door locked");
     } else {
 
@@ -144,20 +152,23 @@ void clearData() {
   return;
 }
 
-void Unlock() {
-  myServo.write(0);  // Rotate servo to unlock (or your "unlock" position)
-  delay(120);        // Wait for 5 seconds
+// void Unlock() {
+//   myServo.write(0);  // Rotate servo to unlock (or your "unlock" position)
+//   delay(120);        // Wait for 5 seconds
+//   myServo.write(91);
+//   delay(2000);
+//   isOpen = true;
+// }
+
+void SetLock(int x, int y, boolean z) {
+  myServo.write(x);  // Rotate servo 
+  delay(y);          // Wait
   myServo.write(91);
-  delay(2000);
-  isOpen = true;
+  isOpen = z;
+  EEPROM.put(100, isOpen);
 }
 
-void Lock() {
-  myServo.write(180);  // Rotate servo to "lock" position
-  delay(120);          // Wait
-  myServo.write(91);
-  isOpen = false;
-}
+
 
 boolean readID() {
   //Check if a new tag is detected or not. If not return.
