@@ -41,60 +41,28 @@ void setup() {
   myServo.attach(signalPin);
   lcd.setCursor(0, 0);
   lcd.print("Stand by...");
-
-  //          for(i=0 ; i<sizeof(Master);i++){        //When   you upload the code the first time keep it commented
-  //            EEPROM.get(i,   Master[i]);             //Upload the code and change it to store it in the EEPROM
-  //              }                                  //Then uncomment this for loop and   reupload the code (It's done only once)
 }
 
 void loop() {
 
-  // lcd.setCursor(0,0);
-  // lcd.print("Enter Password:");
-
   customKey = customKeypad.getKey();
   if (customKey == '*') {
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("Enter Password:");
-    // while (1)
-    // {
-    //   /* code */
-    //   if (data_count == Password_Length - 1)
-    //   {
-    //     break;
-    //   }
-    //   customKey = customKeypad.getKey();
-    //   if (customKey != NULL)
-    //   {
-    //     Data[data_count] = customKey;
-    //     lcd.setCursor(data_count, 1);
-    //     lcd.print(Data[data_count]);
-    //     data_count++;
-    //   }
-    // }
+    DisplayText(0, 0, "Enter Password:");
+    
     GetCode();
 
     if (data_count == Password_Length - 1) {
       lcd.clear();
 
       if (!strcmp(Data, Master)) {
-        lcd.print("Correct");
+        DisplayText(0, 0, "Correct");
         if (isOpen) {
-          lcd.clear();
-          lcd.print("Door is opened!");
-          delay(2000);
+          DisplayText(0, 0, "Door is opened!");
         } else {
-
-          myServo.write(0);  // Rotate servo to unlock (or your "unlock" position)
-          delay(120);        // Wait for 5 seconds
-          myServo.write(91);
-          delay(2000);
-          isOpen = true;
+          Unlock();
         }
       } else {
-        lcd.print("Incorrect");
-        delay(2000);
+        DisplayText(0, 0, "Incorrect");
       }
 
       WaitKey();
@@ -102,21 +70,17 @@ void loop() {
   }
 
   if (customKey == '#') {  // To change the code it calls the changecode function
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("Old Password:");
+   
+    DisplayText(0, 0, "Old Password:");
     GetCode();
     if (data_count == Password_Length - 1) {
       lcd.clear();
 
       if (!strcmp(Data, Master)) {
-        lcd.clear();
-        lcd.setCursor(0, 0);
-        lcd.print("New Password:");
+        DisplayText(0, 0, "New Password: ");
         ChangePassword();
       } else {
-        lcd.print("Incorrect");
-        delay(2000);
+        DisplayText(0, 0, "Incorrect");
       }
 
       WaitKey();
@@ -125,19 +89,11 @@ void loop() {
 
   if (customKey == 'D') {
     if (isOpen) {
-
-      myServo.write(180);  // Rotate servo to "lock" position
-      delay(120);          // Wait
-      myServo.write(91);
-      isOpen = false;
-
-      lcd.clear();
-      lcd.print("Door locked");
-      delay(2000);
+      Lock();
+      DisplayText(0,0,"Door locked");
     } else {
-      lcd.clear();
-      lcd.print("Door locked!");
-      delay(2000);
+
+      DisplayText(0,0,"Door locked!");
     }
 
     WaitKey();
@@ -162,6 +118,28 @@ void clearData() {
     Data[data_count--] = 0;
   }
   return;
+}
+
+void Unlock() {
+  myServo.write(0);  // Rotate servo to unlock (or your "unlock" position)
+  delay(120);        // Wait for 5 seconds
+  myServo.write(91);
+  delay(2000);
+  isOpen = true;
+}
+
+void Lock() {
+  myServo.write(180);  // Rotate servo to "lock" position
+  delay(120);          // Wait
+  myServo.write(91);
+  isOpen = false;
+}
+
+void DisplayText(int x, int y, String text) {
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print(text);
+  delay(1000);
 }
 
 void WaitKey() {
@@ -190,7 +168,6 @@ void ChangePassword() {
     Master[i] = Data[i];
   }
 
-  lcd.clear();
-  lcd.print("Pwd Changed!");
-  delay(2000);  // Show confirmation for 2 seconds
+  DisplayText(0,0,"Pwd Changed");
+
 }
