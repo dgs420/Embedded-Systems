@@ -16,7 +16,9 @@ int signalPin = 10;
 char Data[Password_Length];
 char Master[Password_Length] = "1234";
 byte data_count = 0, master_count = 0;
-String tag_UID = "F3D2CC1B";  // Replace this with the UID of your tag!!!
+String tag_UID = "2371501C";  // Replace these with the UID of your tag
+String tag_UID1 = "70D7CF21";
+
 String tagID = "";
 MFRC522 mfrc522(SS_PIN, RST_PIN); 
 bool Pass_is_good;
@@ -63,16 +65,23 @@ void setup() {
 
 void loop() {
   readID();
-  if (tagID == tag_UID) {
+  if (tagID == tag_UID || tagID == tag_UID1) {
     DisplayText(0, 0, "Valid card");
+    lcd.clear();
     if (isOpen) {
       DisplayText(0, 0, "Door is opened!");
+      lcd.clear();
     } else {
       // Unlock();
       SetLock(0,ANGLE,true);
     }
+    tagID = "";
+    WaitKey();
   } else if (tagID != tag_UID && tagID != NULL){
     DisplayText(0, 0, "Invalid card");
+    tagID = "";
+    lcd.clear();
+    WaitKey();
   }
   customKey = customKeypad.getKey();
   if (customKey == '*') {
@@ -138,7 +147,8 @@ void GetCode() {  // Getting   code sequence
     if (customKey != NULL) {
       Data[data_count] = customKey;
       lcd.setCursor(data_count, 1);
-      lcd.print(Data[data_count]);
+      // lcd.print(Data[data_count]);
+      lcd.print("*");
       data_count++;
     }
     delay(100);
@@ -151,14 +161,6 @@ void clearData() {
   }
   return;
 }
-
-// void Unlock() {
-//   myServo.write(0);  // Rotate servo to unlock (or your "unlock" position)
-//   delay(120);        // Wait for 5 seconds
-//   myServo.write(91);
-//   delay(2000);
-//   isOpen = true;
-// }
 
 void SetLock(int x, int y, boolean z) {
   myServo.write(x);  // Rotate servo 
@@ -212,13 +214,13 @@ void ChangePassword() {
       Data[data_count] = key;  // Store the new key press in Data array
       lcd.setCursor(data_count, 1);
       lcd.print(Data[data_count]);
-      // lcd.print("*"); // Optionally, print * for each digit entered for privacy
+      // lcd.print("*");
       data_count++;
     }
     delay(100);  // Small delay to debounce keypad input
   }
 
-  // Once the new password is fully entered, update the Master password
+  // Update the Master password
   for (int i = 0; i < Password_Length; i++) {
     Master[i] = Data[i];
     EEPROM.put(i, Master[i]);
