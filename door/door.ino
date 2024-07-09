@@ -45,7 +45,7 @@ Keypad customKeypad = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS)
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 Servo myServo;
-
+    
 void setup() {
   lcd.init();
   lcd.backlight();
