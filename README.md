@@ -1,3 +1,5 @@
+# This is group 03 Embedded Systems Final Project
+
 # Safe Lock Program
 
 ## Overview
